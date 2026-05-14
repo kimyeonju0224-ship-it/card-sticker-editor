@@ -31,7 +31,7 @@ h1{
 }
 
 .panel{
-    width:320px;
+    width:330px;
     background:white;
     padding:20px;
     border-radius:20px;
@@ -62,8 +62,12 @@ button{
     margin-top:10px;
 }
 
-button:hover{
-    opacity:0.9;
+select{
+    width:100%;
+    padding:14px;
+    border-radius:12px;
+    margin-top:10px;
+    font-size:15px;
 }
 
 input[type="range"]{
@@ -84,12 +88,10 @@ canvas{
     color:#666;
 }
 
-select{
-    width:100%;
-    padding:14px;
-    border-radius:12px;
-    margin-top:10px;
-    font-size:15px;
+.label{
+    margin-top:18px;
+    font-weight:bold;
+    font-size:14px;
 }
 </style>
 </head>
@@ -105,30 +107,42 @@ select{
 
 <div class="panel">
 
+<div class="label">1. 사진 업로드</div>
 <input type="file" id="upload" accept="image/*">
 
+<div class="label">2. 상품 선택</div>
 <select id="template">
 <option value="card">카드스티커</option>
 <option value="fourcut">인생네컷</option>
 <option value="square">정사각형</option>
 </select>
 
-<p>확대 / 축소</p>
+<div class="label">3. 카드칩 타입</div>
+<select id="chipType">
+<option value="normal">일반형</option>
+<option value="mini">미니형</option>
+<option value="tossMini">토스미니형</option>
+<option value="traffic">교통카드형</option>
+</select>
+
+<div class="label">4. 확대 / 축소</div>
 <input type="range" id="scale" min="0.5" max="3" step="0.01" value="1">
 
 <button onclick="resetImage()">초기화</button>
 <button onclick="downloadImage()">PNG 저장</button>
 
 <div class="info">
-얼굴이 너무 가장자리로 붙지 않게 조정하면 더 예쁘게 제작돼요.
+<b>안내</b><br>
+빨간 점선 = 실제 컷팅되는 칼선<br>
+초록 점선 = 안전선<br>
+노란 박스 = 카드칩 위치<br><br>
+중요한 얼굴, 글자, 손가락은 초록 안전선 안쪽에 들어오게 맞춰주세요.
 </div>
 
 </div>
 
 <div class="preview">
-
 <canvas id="canvas" width="856" height="540"></canvas>
-
 </div>
 
 </div>
@@ -143,6 +157,7 @@ const ctx = canvas.getContext("2d");
 const upload = document.getElementById("upload");
 const scaleSlider = document.getElementById("scale");
 const templateSelect = document.getElementById("template");
+const chipTypeSelect = document.getElementById("chipType");
 
 let img = null;
 
@@ -160,36 +175,69 @@ const templates = {
     square:{width:700,height:700}
 };
 
-function setTemplate(){
+const chipTypes = {
+    normal:{
+        name:"일반형",
+        x:95,
+        y:190,
+        w:115,
+        h:90
+    },
+    mini:{
+        name:"미니형",
+        x:85,
+        y:205,
+        w:90,
+        h:70
+    },
+    tossMini:{
+        name:"토스미니형",
+        x:95,
+        y:175,
+        w:105,
+        h:80
+    },
+    traffic:{
+        name:"교통카드형",
+        x:100,
+        y:170,
+        w:130,
+        h:95
+    }
+};
 
+function setTemplate(){
     const type = templateSelect.value;
 
     canvas.width = templates[type].width;
     canvas.height = templates[type].height;
 
+    if(type !== "card"){
+        chipTypeSelect.disabled = true;
+    }else{
+        chipTypeSelect.disabled = false;
+    }
+
     draw();
 }
 
 templateSelect.addEventListener("change",setTemplate);
+chipTypeSelect.addEventListener("change",draw);
 
 upload.addEventListener("change",(e)=>{
-
     const file = e.target.files[0];
-
     if(!file) return;
 
     const reader = new FileReader();
 
     reader.onload = function(event){
-
         img = new Image();
 
         img.onload = function(){
-
             scale = 1;
             posX = 0;
             posY = 0;
-
+            scaleSlider.value = 1;
             draw();
         }
 
@@ -200,13 +248,15 @@ upload.addEventListener("change",(e)=>{
 });
 
 scaleSlider.addEventListener("input",()=>{
-
     scale = Number(scaleSlider.value);
-
     draw();
 });
 
 function draw(){
+    drawBase(true);
+}
+
+function drawBase(showGuide){
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
@@ -214,16 +264,14 @@ function draw(){
     ctx.fillRect(0,0,canvas.width,canvas.height);
 
     if(!img){
-
         ctx.fillStyle="#999";
         ctx.font="28px sans-serif";
         ctx.textAlign="center";
-
-        ctx.fillText(
-            "사진을 업로드해주세요",
-            canvas.width/2,
-            canvas.height/2
-        );
+        ctx.fillText("사진을 업로드해주세요",canvas.width/2,canvas.height/2);
+        
+        if(showGuide){
+            drawGuides();
+        }
 
         return;
     }
@@ -235,12 +283,9 @@ function draw(){
     let drawHeight;
 
     if(imageRatio > canvasRatio){
-
         drawHeight = canvas.height * scale;
         drawWidth = drawHeight * imageRatio;
-
     }else{
-
         drawWidth = canvas.width * scale;
         drawHeight = drawWidth / imageRatio;
     }
@@ -252,49 +297,103 @@ function draw(){
 
     ctx.save();
     ctx.clip();
-
     ctx.drawImage(img,x,y,drawWidth,drawHeight);
-
     ctx.restore();
 
-    ctx.strokeStyle="rgba(255,255,255,0.9)";
-    ctx.lineWidth=8;
+    if(showGuide){
+        drawGuides();
+    }
+}
 
-    roundRect(ctx,4,4,canvas.width-8,canvas.height-8,36);
+function drawGuides(){
 
+    const cutMargin = 14;
+    const safeMargin = 45;
+
+    ctx.save();
+
+    // 실제 컷팅 칼선
+    ctx.setLineDash([16,10]);
+    ctx.strokeStyle="rgba(255,0,0,0.85)";
+    ctx.lineWidth=4;
+    roundRect(
+        ctx,
+        cutMargin,
+        cutMargin,
+        canvas.width - cutMargin*2,
+        canvas.height - cutMargin*2,
+        34
+    );
     ctx.stroke();
+
+    // 안전선
+    ctx.setLineDash([10,8]);
+    ctx.strokeStyle="rgba(0,170,80,0.9)";
+    ctx.lineWidth=4;
+    roundRect(
+        ctx,
+        safeMargin,
+        safeMargin,
+        canvas.width - safeMargin*2,
+        canvas.height - safeMargin*2,
+        26
+    );
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+
+    // 카드칩 위치는 카드스티커에서만 표시
+    if(templateSelect.value === "card"){
+        drawChipGuide();
+    }
+
+    ctx.restore();
+}
+
+function drawChipGuide(){
+
+    const chip = chipTypes[chipTypeSelect.value];
+
+    ctx.save();
+
+    ctx.fillStyle="rgba(255,210,0,0.28)";
+    ctx.strokeStyle="rgba(255,170,0,0.95)";
+    ctx.lineWidth=4;
+
+    roundRect(ctx,chip.x,chip.y,chip.w,chip.h,12);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle="rgba(0,0,0,0.75)";
+    ctx.font="22px sans-serif";
+    ctx.textAlign="center";
+    ctx.fillText(chip.name + " 카드칩", chip.x + chip.w/2, chip.y - 14);
+
+    ctx.restore();
 }
 
 function roundRect(ctx,x,y,width,height,radius){
 
     ctx.beginPath();
-
     ctx.moveTo(x+radius,y);
     ctx.lineTo(x+width-radius,y);
     ctx.quadraticCurveTo(x+width,y,x+width,y+radius);
-
     ctx.lineTo(x+width,y+height-radius);
     ctx.quadraticCurveTo(x+width,y+height,x+width-radius,y+height);
-
     ctx.lineTo(x+radius,y+height);
     ctx.quadraticCurveTo(x,y+height,x,y+height-radius);
-
     ctx.lineTo(x,y+radius);
     ctx.quadraticCurveTo(x,y,x+radius,y);
-
     ctx.closePath();
 }
 
 canvas.addEventListener("mousedown",(e)=>{
-
     dragging = true;
-
     startX = e.offsetX;
     startY = e.offsetY;
 });
 
 canvas.addEventListener("mousemove",(e)=>{
-
     if(!dragging) return;
 
     posX += e.offsetX - startX;
@@ -307,35 +406,33 @@ canvas.addEventListener("mousemove",(e)=>{
 });
 
 canvas.addEventListener("mouseup",()=>{
-
     dragging = false;
 });
 
 canvas.addEventListener("mouseleave",()=>{
-
     dragging = false;
 });
 
 function resetImage(){
-
     scale = 1;
     posX = 0;
     posY = 0;
-
     scaleSlider.value = 1;
-
     draw();
 }
 
 function downloadImage(){
 
+    // 저장할 때는 가이드선 제외
+    drawBase(false);
+
     const link = document.createElement("a");
-
-    link.download = "card-sticker.png";
-
-    link.href = canvas.toDataURL();
-
+    link.download = "card-sticker-image.png";
+    link.href = canvas.toDataURL("image/png");
     link.click();
+
+    // 저장 후 다시 가이드선 보이게
+    drawBase(true);
 }
 
 setTemplate();
