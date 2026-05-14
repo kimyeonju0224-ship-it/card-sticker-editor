@@ -4,117 +4,87 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>카드스티커 사진 편집기</title>
-
 <style>
-body{
-  margin:0;
-  font-family:sans-serif;
-  background:#f5f1eb;
-  color:#222;
-}
-.container{
-  max-width:1200px;
-  margin:auto;
-  padding:30px;
-}
+body{margin:0;font-family:sans-serif;background:#f5f1eb;color:#222;}
+.container{max-width:1200px;margin:auto;padding:30px;}
 h1{font-size:32px;margin-bottom:10px;}
 .top{display:flex;gap:30px;flex-wrap:wrap;}
-.panel{
-  width:330px;
-  background:white;
-  padding:20px;
-  border-radius:20px;
-  box-shadow:0 5px 20px rgba(0,0,0,0.08);
-}
-.preview{
-  flex:1;
-  background:white;
-  padding:20px;
-  border-radius:20px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  min-height:700px;
-  box-shadow:0 5px 20px rgba(0,0,0,0.08);
-}
-.label{
-  margin-top:18px;
-  font-weight:bold;
-  font-size:14px;
-}
-select, button{
-  width:100%;
-  padding:15px;
-  border-radius:14px;
-  font-size:16px;
-  margin-top:10px;
-}
-button{
-  border:none;
-  background:black;
-  color:white;
-  cursor:pointer;
-}
+.panel{width:330px;background:white;padding:20px;border-radius:20px;box-shadow:0 5px 20px rgba(0,0,0,0.08);}
+.preview{flex:1;background:white;padding:20px;border-radius:20px;display:flex;justify-content:center;align-items:center;min-height:700px;box-shadow:0 5px 20px rgba(0,0,0,0.08);}
+.label{margin-top:18px;font-weight:bold;font-size:14px;}
+select,button{width:100%;padding:14px;border-radius:14px;font-size:15px;margin-top:8px;}
+button{border:none;background:black;color:white;cursor:pointer;}
+button.small{padding:10px;font-size:14px;}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.move-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px;}
+.move-grid button:nth-child(1){grid-column:2;}
+.move-grid button:nth-child(2){grid-column:1;}
+.move-grid button:nth-child(3){grid-column:2;}
+.move-grid button:nth-child(4){grid-column:3;}
 input[type="range"]{width:100%;}
-canvas{
-  max-width:100%;
-  max-height:75vh;
-  border-radius:28px;
-  box-shadow:0 10px 40px rgba(0,0,0,0.18);
-  cursor:grab;
-}
-.info{
-  margin-top:20px;
-  font-size:14px;
-  line-height:1.7;
-  color:#555;
-}
+canvas{max-width:100%;max-height:75vh;border-radius:28px;box-shadow:0 10px 40px rgba(0,0,0,0.18);cursor:grab;}
+.info{margin-top:20px;font-size:14px;line-height:1.7;color:#555;}
 </style>
 </head>
 
 <body>
 <div class="container">
-  <h1>카드스티커 사진 편집기</h1>
-  <p>사진을 업로드한 뒤 위치와 크기를 조절해주세요.</p>
+<h1>카드스티커 사진 편집기</h1>
+<p>사진을 업로드한 뒤 위치와 크기, 회전을 조절해주세요.</p>
 
-  <div class="top">
-    <div class="panel">
-      <div class="label">1. 사진 업로드</div>
-      <input type="file" id="upload" accept="image/*" />
+<div class="top">
+<div class="panel">
+<div class="label">1. 사진 업로드</div>
+<input type="file" id="upload" accept="image/*" />
 
-      <div class="label">2. 상품 선택</div>
-      <select id="template">
-        <option value="cardPortrait">카드스티커 세로형</option>
-        <option value="cardLandscape">카드스티커 가로형</option>
-      </select>
+<div class="label">2. 상품 선택</div>
+<select id="template">
+<option value="cardPortrait">카드스티커 세로형</option>
+<option value="cardLandscape">카드스티커 가로형</option>
+</select>
 
-      <div class="label">3. 카드칩 타입</div>
-      <select id="chipType">
-        <option value="mini">미니형</option>
-        <option value="normal">일반형</option>
-        <option value="tossmini">토스미니형</option>
-        <option value="traffic">교통카드형</option>
-      </select>
+<div class="label">3. 카드칩 타입</div>
+<select id="chipType">
+<option value="mini">미니형</option>
+<option value="normal">일반형</option>
+<option value="tossmini">토스미니형</option>
+<option value="traffic">교통카드형</option>
+</select>
 
-      <div class="label">4. 확대 / 축소</div>
-      <input type="range" id="scale" min="0.5" max="3" step="0.01" value="1" />
+<div class="label">4. 확대 / 축소</div>
+<input type="range" id="scale" min="0.5" max="3" step="0.01" value="1" />
 
-      <button onclick="resetImage()">초기화</button>
-      <button onclick="downloadImage()">PNG 저장</button>
+<div class="label">5. 회전</div>
+<input type="range" id="rotation" min="-45" max="45" step="0.1" value="0" />
+<div class="grid">
+<button class="small" onclick="rotate90(-1)">왼쪽 90°</button>
+<button class="small" onclick="rotate90(1)">오른쪽 90°</button>
+</div>
 
-      <div class="info">
-        <b>안내</b><br>
-        빨간 점선 = 안전선<br>
-        초록 점선 = 실제 컷팅되는 칼선<br>
-        카드칩 위치는 선택한 타입에 따라 자동으로 표시됩니다.<br><br>
-        중요한 얼굴, 글자, 손가락은 빨간 안전선 안쪽에 들어오게 맞춰주세요.
-      </div>
-    </div>
+<div class="label">6. 위치 미세 조정</div>
+<div class="move-grid">
+<button class="small" onclick="moveImage(0,-1)">▲</button>
+<button class="small" onclick="moveImage(-1,0)">◀</button>
+<button class="small" onclick="moveImage(0,1)">▼</button>
+<button class="small" onclick="moveImage(1,0)">▶</button>
+</div>
 
-    <div class="preview">
-      <canvas id="canvas"></canvas>
-    </div>
-  </div>
+<button onclick="resetImage()">초기화</button>
+<button onclick="downloadImage()">PNG 저장</button>
+
+<div class="info">
+<b>안내</b><br>
+빨간 점선 = 안전선<br>
+초록 점선 = 실제 컷팅되는 칼선<br>
+사진은 드래그로 이동할 수 있어요.<br><br>
+중요한 얼굴, 글자, 손가락은 빨간 안전선 안쪽에 들어오게 맞춰주세요.
+</div>
+</div>
+
+<div class="preview">
+<canvas id="canvas"></canvas>
+</div>
+</div>
 </div>
 
 <script>
@@ -123,6 +93,7 @@ const ctx = canvas.getContext("2d");
 
 const upload = document.getElementById("upload");
 const scaleSlider = document.getElementById("scale");
+const rotationSlider = document.getElementById("rotation");
 const templateSelect = document.getElementById("template");
 const chipTypeSelect = document.getElementById("chipType");
 
@@ -132,157 +103,184 @@ let guideImg = new Image();
 let scale = 1;
 let posX = 0;
 let posY = 0;
+let rotation = 0;
 
 let dragging = false;
 let startX = 0;
 let startY = 0;
 
 function getGuideFile(){
-  const type = templateSelect.value;
-  const chip = chipTypeSelect.value;
+const type = templateSelect.value;
+const chip = chipTypeSelect.value;
 
-  if(type === "cardPortrait"){
-    return `guide-${chip}-portrait.png`;
-  }
+if(type === "cardPortrait") return `guide-${chip}-portrait.png`;
+if(type === "cardLandscape") return `guide-${chip}-landscape.png`;
 
-  if(type === "cardLandscape"){
-    return `guide-${chip}-landscape.png`;
-  }
-
-  return "";
+return "";
 }
 
 function loadGuide(){
-  const guideFile = getGuideFile();
+const guideFile = getGuideFile();
+guideImg = new Image();
 
-  guideImg = new Image();
+guideImg.onload = function(){
+canvas.width = guideImg.naturalWidth;
+canvas.height = guideImg.naturalHeight;
+draw();
+};
 
-  guideImg.onload = function(){
-    canvas.width = guideImg.naturalWidth;
-    canvas.height = guideImg.naturalHeight;
-    draw();
-  };
-
-  guideImg.src = guideFile;
+guideImg.src = guideFile;
 }
 
 function draw(showGuide = true){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+ctx.clearRect(0,0,canvas.width,canvas.height);
+ctx.fillStyle = "#f0ebe5";
+ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  ctx.fillStyle = "#f0ebe5";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+if(userImg){
+const imageRatio = userImg.width / userImg.height;
+const canvasRatio = canvas.width / canvas.height;
 
-  if(userImg){
-    const imageRatio = userImg.width / userImg.height;
-    const canvasRatio = canvas.width / canvas.height;
+let drawWidth;
+let drawHeight;
 
-    let drawWidth;
-    let drawHeight;
+if(imageRatio > canvasRatio){
+drawHeight = canvas.height * scale;
+drawWidth = drawHeight * imageRatio;
+}else{
+drawWidth = canvas.width * scale;
+drawHeight = drawWidth / imageRatio;
+}
 
-    if(imageRatio > canvasRatio){
-      drawHeight = canvas.height * scale;
-      drawWidth = drawHeight * imageRatio;
-    }else{
-      drawWidth = canvas.width * scale;
-      drawHeight = drawWidth / imageRatio;
-    }
+ctx.save();
 
-    const x = canvas.width/2 - drawWidth/2 + posX;
-    const y = canvas.height/2 - drawHeight/2 + posY;
+ctx.translate(canvas.width / 2 + posX, canvas.height / 2 + posY);
+ctx.rotate(rotation * Math.PI / 180);
 
-    ctx.drawImage(userImg, x, y, drawWidth, drawHeight);
-  }else{
-    ctx.fillStyle = "#999";
-    ctx.font = "28px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("사진을 업로드해주세요", canvas.width/2, canvas.height/2);
-  }
+ctx.drawImage(
+userImg,
+-drawWidth / 2,
+-drawHeight / 2,
+drawWidth,
+drawHeight
+);
 
-  if(showGuide && guideImg.complete){
-    ctx.drawImage(guideImg, 0, 0, canvas.width, canvas.height);
-  }
+ctx.restore();
+
+}else{
+ctx.fillStyle = "#999";
+ctx.font = "28px sans-serif";
+ctx.textAlign = "center";
+ctx.fillText("사진을 업로드해주세요", canvas.width/2, canvas.height/2);
+}
+
+if(showGuide && guideImg.complete){
+ctx.drawImage(guideImg, 0, 0, canvas.width, canvas.height);
+}
 }
 
 upload.addEventListener("change", function(e){
-  const file = e.target.files[0];
-  if(!file) return;
+const file = e.target.files[0];
+if(!file) return;
 
-  const reader = new FileReader();
+const reader = new FileReader();
 
-  reader.onload = function(event){
-    userImg = new Image();
+reader.onload = function(event){
+userImg = new Image();
 
-    userImg.onload = function(){
-      scale = 1;
-      posX = 0;
-      posY = 0;
-      scaleSlider.value = 1;
-      draw();
-    };
+userImg.onload = function(){
+scale = 1;
+posX = 0;
+posY = 0;
+rotation = 0;
+scaleSlider.value = 1;
+rotationSlider.value = 0;
+draw();
+};
 
-    userImg.src = event.target.result;
-  };
+userImg.src = event.target.result;
+};
 
-  reader.readAsDataURL(file);
+reader.readAsDataURL(file);
 });
 
 templateSelect.addEventListener("change", function(){
-  resetImage();
-  loadGuide();
+resetImage();
+loadGuide();
 });
 
 chipTypeSelect.addEventListener("change", function(){
-  loadGuide();
+loadGuide();
 });
 
 scaleSlider.addEventListener("input", function(){
-  scale = Number(scaleSlider.value);
-  draw();
+scale = Number(scaleSlider.value);
+draw();
+});
+
+rotationSlider.addEventListener("input", function(){
+rotation = Number(rotationSlider.value);
+draw();
 });
 
 canvas.addEventListener("mousedown", function(e){
-  dragging = true;
-  startX = e.offsetX;
-  startY = e.offsetY;
+dragging = true;
+startX = e.offsetX;
+startY = e.offsetY;
+canvas.style.cursor = "grabbing";
 });
 
 canvas.addEventListener("mousemove", function(e){
-  if(!dragging) return;
+if(!dragging) return;
 
-  posX += e.offsetX - startX;
-  posY += e.offsetY - startY;
+posX += e.offsetX - startX;
+posY += e.offsetY - startY;
 
-  startX = e.offsetX;
-  startY = e.offsetY;
+startX = e.offsetX;
+startY = e.offsetY;
 
-  draw();
+draw();
 });
 
-canvas.addEventListener("mouseup", function(){
-  dragging = false;
-});
+canvas.addEventListener("mouseup", stopDragging);
+canvas.addEventListener("mouseleave", stopDragging);
 
-canvas.addEventListener("mouseleave", function(){
-  dragging = false;
-});
+function stopDragging(){
+dragging = false;
+canvas.style.cursor = "grab";
+}
+
+function moveImage(dx, dy){
+posX += dx;
+posY += dy;
+draw();
+}
+
+function rotate90(direction){
+rotation += direction * 90;
+rotationSlider.value = rotation;
+draw();
+}
 
 function resetImage(){
-  scale = 1;
-  posX = 0;
-  posY = 0;
-  scaleSlider.value = 1;
-  draw();
+scale = 1;
+posX = 0;
+posY = 0;
+rotation = 0;
+scaleSlider.value = 1;
+rotationSlider.value = 0;
+draw();
 }
 
 function downloadImage(){
-  draw(false);
+draw(false);
 
-  const link = document.createElement("a");
-  link.download = "card-sticker-image.png";
-  link.href = canvas.toDataURL("image/png");
-  link.click();
+const link = document.createElement("a");
+link.download = "card-sticker-image.png";
+link.href = canvas.toDataURL("image/png");
+link.click();
 
-  draw(true);
+draw(true);
 }
 
 loadGuide();
