@@ -289,15 +289,13 @@ if(showGuide){
 
         guideImg.src = guideFile;
 
-        guideImg.onload = () => {
-            ctx.drawImage(
-                guideImg,
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
-        };
+        ctx.drawImage(
+            guideImg,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
 
     }
 
@@ -467,6 +465,7 @@ function downloadImage(){
 }
 
 setTemplate();
+    guideImg.onload = draw;
 
 </script>
 
