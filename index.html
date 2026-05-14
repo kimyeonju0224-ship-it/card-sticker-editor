@@ -2,45 +2,44 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>카드스티커 사진 편집기</title>
+
 <style>
 body{margin:0;font-family:sans-serif;background:#f5f1eb;color:#222;}
-.container{max-width:1200px;margin:auto;padding:30px;}
-h1{font-size:32px;margin-bottom:10px;}
-.top{display:flex;gap:30px;flex-wrap:wrap;}
-.panel{width:330px;background:white;padding:20px;border-radius:20px;box-shadow:0 5px 20px rgba(0,0,0,0.08);}
-.preview{flex:1;background:white;padding:20px;border-radius:20px;display:flex;justify-content:center;align-items:center;min-height:700px;box-shadow:0 5px 20px rgba(0,0,0,0.08);}
-.label{margin-top:18px;font-weight:bold;font-size:14px;}
-select,button{width:100%;padding:14px;border-radius:14px;font-size:15px;margin-top:8px;}
+.container{max-width:1100px;margin:auto;padding:20px;}
+h1{font-size:26px;margin:0 0 8px;}
+p{font-size:14px;color:#555;}
+.top{display:flex;gap:24px;flex-wrap:wrap;}
+.panel{width:300px;background:white;padding:18px;border-radius:20px;box-shadow:0 5px 18px rgba(0,0,0,0.08);}
+.preview{flex:1;background:white;padding:16px;border-radius:20px;display:flex;justify-content:center;align-items:center;min-height:600px;box-shadow:0 5px 18px rgba(0,0,0,0.08);}
+.label{margin-top:14px;font-weight:bold;font-size:14px;}
+select,button{width:100%;padding:13px;border-radius:14px;font-size:15px;margin-top:8px;}
 button{border:none;background:black;color:white;cursor:pointer;}
-button.small{padding:10px;font-size:14px;}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.move-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px;}
-.move-grid button:nth-child(1){grid-column:2;}
-.move-grid button:nth-child(2){grid-column:1;}
-.move-grid button:nth-child(3){grid-column:2;}
-.move-grid button:nth-child(4){grid-column:3;}
-input[type="range"]{width:100%;}
-canvas{
-  max-width:100%;
-  max-height:75vh;
-  border-radius:28px;
-  box-shadow:0 10px 40px rgba(0,0,0,0.18);
-  cursor:grab;
-  touch-action:none;
+canvas{max-width:100%;max-height:75vh;border-radius:24px;box-shadow:0 10px 35px rgba(0,0,0,0.16);touch-action:none;}
+.info{margin-top:16px;font-size:13px;line-height:1.6;color:#555;}
+
+@media(max-width:700px){
+  .container{padding:14px;}
+  h1{font-size:22px;}
+  .top{display:block;}
+  .panel{width:auto;margin-bottom:14px;padding:16px;}
+  .preview{min-height:auto;padding:10px;}
+  canvas{max-height:68vh;border-radius:18px;}
+  .info{font-size:12px;}
 }
-.info{margin-top:20px;font-size:14px;line-height:1.7;color:#555;}
 </style>
 </head>
 
 <body>
 <div class="container">
 <h1>카드스티커 사진 편집기</h1>
-<p>사진을 업로드한 뒤 위치와 크기, 회전을 조절해주세요.</p>
+<p>사진을 업로드한 뒤 손가락으로 위치, 확대, 회전을 조절해주세요.</p>
 
 <div class="top">
 <div class="panel">
+
 <div class="label">1. 사진 업로드</div>
 <input type="file" id="upload" accept="image/*" />
 
@@ -58,34 +57,21 @@ canvas{
 <option value="traffic">교통카드형</option>
 </select>
 
-<div class="label">4. 확대 / 축소</div>
-<input type="range" id="scale" min="0.5" max="3" step="0.01" value="1" />
-
-<div class="label">5. 회전</div>
-<input type="range" id="rotation" min="-45" max="45" step="0.1" value="0" />
 <div class="grid">
-<button class="small" onclick="rotate90(-1)">왼쪽 90°</button>
-<button class="small" onclick="rotate90(1)">오른쪽 90°</button>
-</div>
-
-<div class="label">6. 위치 미세 조정</div>
-<div class="move-grid">
-<button class="small" onclick="moveImage(0,-1)">▲</button>
-<button class="small" onclick="moveImage(-1,0)">◀</button>
-<button class="small" onclick="moveImage(0,1)">▼</button>
-<button class="small" onclick="moveImage(1,0)">▶</button>
-</div>
-
 <button onclick="resetImage()">초기화</button>
 <button onclick="downloadImage()">PNG 저장</button>
+</div>
 
 <div class="info">
-<b>안내</b><br>
+<b>조작 방법</b><br>
+한 손가락 드래그 = 위치 이동<br>
+두 손가락 벌리기 = 확대<br>
+두 손가락 좁히기 = 축소<br>
+두 손가락 돌리기 = 회전<br><br>
 빨간 점선 = 안전선<br>
-초록 점선 = 실제 컷팅되는 칼선<br>
-사진은 PC/모바일 모두 드래그로 이동할 수 있어요.<br><br>
-중요한 얼굴, 글자, 손가락은 빨간 안전선 안쪽에 들어오게 맞춰주세요.
+초록 점선 = 실제 컷팅되는 칼선
 </div>
+
 </div>
 
 <div class="preview">
@@ -99,8 +85,6 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 const upload = document.getElementById("upload");
-const scaleSlider = document.getElementById("scale");
-const rotationSlider = document.getElementById("rotation");
 const templateSelect = document.getElementById("template");
 const chipTypeSelect = document.getElementById("chipType");
 
@@ -112,9 +96,14 @@ let posX = 0;
 let posY = 0;
 let rotation = 0;
 
-let dragging = false;
-let startX = 0;
-let startY = 0;
+let isDragging = false;
+let lastX = 0;
+let lastY = 0;
+
+let initialDistance = 0;
+let initialAngle = 0;
+let initialScale = 1;
+let initialRotation = 0;
 
 function getGuideFile(){
   const type = templateSelect.value;
@@ -162,16 +151,9 @@ function draw(showGuide = true){
     ctx.save();
     ctx.translate(canvas.width / 2 + posX, canvas.height / 2 + posY);
     ctx.rotate(rotation * Math.PI / 180);
-
-    ctx.drawImage(
-      userImg,
-      -drawWidth / 2,
-      -drawHeight / 2,
-      drawWidth,
-      drawHeight
-    );
-
+    ctx.drawImage(userImg, -drawWidth/2, -drawHeight/2, drawWidth, drawHeight);
     ctx.restore();
+
   }else{
     ctx.fillStyle = "#999";
     ctx.font = "28px sans-serif";
@@ -194,13 +176,7 @@ upload.addEventListener("change", function(e){
     userImg = new Image();
 
     userImg.onload = function(){
-      scale = 1;
-      posX = 0;
-      posY = 0;
-      rotation = 0;
-      scaleSlider.value = 1;
-      rotationSlider.value = 0;
-      draw();
+      resetImage();
     };
 
     userImg.src = event.target.result;
@@ -218,89 +194,113 @@ chipTypeSelect.addEventListener("change", function(){
   loadGuide();
 });
 
-scaleSlider.addEventListener("input", function(){
-  scale = Number(scaleSlider.value);
-  draw();
-});
-
-rotationSlider.addEventListener("input", function(){
-  rotation = Number(rotationSlider.value);
-  draw();
-});
-
-function getPointerPosition(e){
+function getCanvasPointFromTouch(touch){
   const rect = canvas.getBoundingClientRect();
-  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
   return {
-    x: (clientX - rect.left) * (canvas.width / rect.width),
-    y: (clientY - rect.top) * (canvas.height / rect.height)
+    x:(touch.clientX - rect.left) * (canvas.width / rect.width),
+    y:(touch.clientY - rect.top) * (canvas.height / rect.height)
   };
 }
 
-function startDrag(e){
+function getDistance(t1,t2){
+  const p1 = getCanvasPointFromTouch(t1);
+  const p2 = getCanvasPointFromTouch(t2);
+  return Math.hypot(p2.x - p1.x, p2.y - p1.y);
+}
+
+function getAngle(t1,t2){
+  const p1 = getCanvasPointFromTouch(t1);
+  const p2 = getCanvasPointFromTouch(t2);
+  return Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
+}
+
+canvas.addEventListener("touchstart", function(e){
   if(!userImg) return;
   e.preventDefault();
 
-  dragging = true;
+  if(e.touches.length === 1){
+    const p = getCanvasPointFromTouch(e.touches[0]);
+    isDragging = true;
+    lastX = p.x;
+    lastY = p.y;
+  }
 
-  const point = getPointerPosition(e);
-  startX = point.x;
-  startY = point.y;
+  if(e.touches.length === 2){
+    isDragging = false;
+    initialDistance = getDistance(e.touches[0], e.touches[1]);
+    initialAngle = getAngle(e.touches[0], e.touches[1]);
+    initialScale = scale;
+    initialRotation = rotation;
+  }
+},{passive:false});
 
-  canvas.style.cursor = "grabbing";
-}
-
-function dragMove(e){
-  if(!dragging || !userImg) return;
+canvas.addEventListener("touchmove", function(e){
+  if(!userImg) return;
   e.preventDefault();
 
-  const point = getPointerPosition(e);
+  if(e.touches.length === 1 && isDragging){
+    const p = getCanvasPointFromTouch(e.touches[0]);
+    posX += p.x - lastX;
+    posY += p.y - lastY;
+    lastX = p.x;
+    lastY = p.y;
+    draw();
+  }
 
-  posX += point.x - startX;
-  posY += point.y - startY;
+  if(e.touches.length === 2){
+    const newDistance = getDistance(e.touches[0], e.touches[1]);
+    const newAngle = getAngle(e.touches[0], e.touches[1]);
 
-  startX = point.x;
-  startY = point.y;
+    scale = initialScale * (newDistance / initialDistance);
+    rotation = initialRotation + (newAngle - initialAngle);
+
+    scale = Math.max(0.3, Math.min(scale, 5));
+
+    draw();
+  }
+},{passive:false});
+
+canvas.addEventListener("touchend", function(){
+  isDragging = false;
+});
+
+canvas.addEventListener("mousedown", function(e){
+  if(!userImg) return;
+  isDragging = true;
+  const rect = canvas.getBoundingClientRect();
+  lastX = (e.clientX - rect.left) * (canvas.width / rect.width);
+  lastY = (e.clientY - rect.top) * (canvas.height / rect.height);
+});
+
+canvas.addEventListener("mousemove", function(e){
+  if(!isDragging || !userImg) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+  posX += x - lastX;
+  posY += y - lastY;
+
+  lastX = x;
+  lastY = y;
 
   draw();
-}
+});
 
-function stopDragging(){
-  dragging = false;
-  canvas.style.cursor = "grab";
-}
+canvas.addEventListener("mouseup", function(){
+  isDragging = false;
+});
 
-canvas.addEventListener("mousedown", startDrag);
-canvas.addEventListener("mousemove", dragMove);
-canvas.addEventListener("mouseup", stopDragging);
-canvas.addEventListener("mouseleave", stopDragging);
-
-canvas.addEventListener("touchstart", startDrag, { passive:false });
-canvas.addEventListener("touchmove", dragMove, { passive:false });
-canvas.addEventListener("touchend", stopDragging);
-canvas.addEventListener("touchcancel", stopDragging);
-
-function moveImage(dx, dy){
-  posX += dx;
-  posY += dy;
-  draw();
-}
-
-function rotate90(direction){
-  rotation += direction * 90;
-  rotationSlider.value = rotation;
-  draw();
-}
+canvas.addEventListener("mouseleave", function(){
+  isDragging = false;
+});
 
 function resetImage(){
   scale = 1;
   posX = 0;
   posY = 0;
   rotation = 0;
-  scaleSlider.value = 1;
-  rotationSlider.value = 0;
   draw();
 }
 
