@@ -161,7 +161,7 @@ const templateSelect = document.getElementById("template");
 const chipTypeSelect = document.getElementById("chipType");
 
 let img = null;
-const guideImg = new Image();
+const guideImages = {};
     
 let scale = 1;
 let posX = 0;
@@ -273,32 +273,7 @@ function drawBase(showGuide){
         ctx.fillText("사진을 업로드해주세요",canvas.width/2,canvas.height/2);
         
 if(showGuide){
-
-    const type = templateSelect.value;
-    const chip = chipTypeSelect.value;
-
-    let guideFile = "";
-
-    if(type === "cardPortrait"){
-        guideFile = `guide-${chip}-portrait.png`;
-    }else if(type === "cardLandscape"){
-        guideFile = `guide-${chip}-landscape.png`;
-    }
-
-    if(guideFile){
-
-        guideImg.src = guideFile;
-
-        ctx.drawImage(
-            guideImg,
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
-
-    }
-
+    drawGuideOverlay();
 }
         }
 
@@ -330,8 +305,8 @@ if(showGuide){
     ctx.restore();
 
     if(showGuide){
-        drawGuides();
-    }
+    drawGuideOverlay();
+}
 }
 
 function drawGuides(){
@@ -463,7 +438,50 @@ function downloadImage(){
     // 저장 후 다시 가이드선 보이게
     drawBase(true);
 }
+function getGuideFile(){
 
+    const type = templateSelect.value;
+    const chip = chipTypeSelect.value;
+
+    if(type === "cardPortrait"){
+        return `guide-${chip}-portrait.png`;
+    }
+
+    if(type === "cardLandscape"){
+        return `guide-${chip}-landscape.png`;
+    }
+
+    return "";
+}
+
+function drawGuideOverlay(){
+
+    const guideFile = getGuideFile();
+
+    if(!guideFile) return;
+
+    if(!guideImages[guideFile]){
+
+        const tempImg = new Image();
+
+        tempImg.src = guideFile;
+
+        tempImg.onload = () => {
+            guideImages[guideFile] = tempImg;
+            draw();
+        };
+
+        return;
+    }
+
+    ctx.drawImage(
+        guideImages[guideFile],
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+}
 setTemplate();
     guideImg.onload = draw;
 
