@@ -112,7 +112,8 @@ canvas{
 
 <div class="label">2. 상품 선택</div>
 <select id="template">
-<option value="card">카드스티커</option>
+<option value="cardLandscape">카드스티커 가로형</option>
+<option value="cardPortrait">카드스티커 세로형</option>
 <option value="fourcut">인생네컷</option>
 <option value="square">정사각형</option>
 </select>
@@ -170,7 +171,8 @@ let startX = 0;
 let startY = 0;
 
 const templates = {
-    card:{width:856,height:540},
+    cardLandscape:{width:856,height:540},
+    cardPortrait:{width:540,height:856},
     fourcut:{width:540,height:860},
     square:{width:700,height:700}
 };
@@ -212,7 +214,7 @@ function setTemplate(){
     canvas.width = templates[type].width;
     canvas.height = templates[type].height;
 
-    if(type !== "card"){
+if(type !== "cardLandscape" && type !== "cardPortrait"){
         chipTypeSelect.disabled = true;
     }else{
         chipTypeSelect.disabled = false;
