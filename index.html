@@ -161,7 +161,8 @@ const templateSelect = document.getElementById("template");
 const chipTypeSelect = document.getElementById("chipType");
 
 let img = null;
-
+const guideImg = new Image();
+    
 let scale = 1;
 let posX = 0;
 let posY = 0;
@@ -271,8 +272,36 @@ function drawBase(showGuide){
         ctx.textAlign="center";
         ctx.fillText("사진을 업로드해주세요",canvas.width/2,canvas.height/2);
         
-        if(showGuide){
-            drawGuides();
+if(showGuide){
+
+    const type = templateSelect.value;
+    const chip = chipTypeSelect.value;
+
+    let guideFile = "";
+
+    if(type === "cardPortrait"){
+        guideFile = `guide-${chip}-portrait.png`;
+    }else if(type === "cardLandscape"){
+        guideFile = `guide-${chip}-landscape.png`;
+    }
+
+    if(guideFile){
+
+        guideImg.src = guideFile;
+
+        guideImg.onload = () => {
+            ctx.drawImage(
+                guideImg,
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+        };
+
+    }
+
+}
         }
 
         return;
