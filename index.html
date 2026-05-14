@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>카드스티커 사진 편집기</title>
+
+<style>
+body{
+    margin:0;
+    font-family:sans-serif;
+    background:#f5f1eb;
+    color:#333;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+    padding:30px;
+}
+
+h1{
+    font-size:32px;
+    margin-bottom:10px;
+}
+
+.top{
+    display:flex;
+    gap:30px;
+    flex-wrap:wrap;
+}
+
+.panel{
+    width:320px;
+    background:white;
+    padding:20px;
+    border-radius:20px;
+    box-shadow:0 5px 20px rgba(0,0,0,0.08);
+}
+
+.preview{
+    flex:1;
+    background:white;
+    padding:20px;
+    border-radius:20px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:700px;
+    box-shadow:0 5px 20px rgba(0,0,0,0.08);
+}
+
+button{
+    width:100%;
+    border:none;
+    padding:15px;
+    border-radius:14px;
+    background:black;
+    color:white;
+    font-size:16px;
+    cursor:pointer;
+    margin-top:10px;
+}
+
+button:hover{
+    opacity:0.9;
+}
+
+input[type="range"]{
+    width:100%;
+}
+
+canvas{
+    border-radius:30px;
+    max-width:100%;
+    box-shadow:0 10px 40px rgba(0,0,0,0.2);
+    cursor:grab;
+}
+
+.info{
+    margin-top:20px;
+    font-size:14px;
+    line-height:1.7;
+    color:#666;
+}
+
+select{
+    width:100%;
+    padding:14px;
+    border-radius:12px;
+    margin-top:10px;
+    font-size:15px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>카드스티커 사진 편집기</h1>
+<p>사진을 업로드한 뒤 위치와 크기를 조절해주세요.</p>
+
+<div class="top">
+
+<div class="panel">
+
+<input type="file" id="upload" accept="image/*">
+
+<select id="template">
+<option value="card">카드스티커</option>
+<option value="fourcut">인생네컷</option>
+<option value="square">정사각형</option>
+</select>
+
+<p>확대 / 축소</p>
+<input type="range" id="scale" min="0.5" max="3" step="0.01" value="1">
+
+<button onclick="resetImage()">초기화</button>
+<button onclick="downloadImage()">PNG 저장</button>
+
+<div class="info">
+얼굴이 너무 가장자리로 붙지 않게 조정하면 더 예쁘게 제작돼요.
+</div>
+
+</div>
+
+<div class="preview">
+
+<canvas id="canvas" width="856" height="540"></canvas>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const upload = document.getElementById("upload");
+const scaleSlider = document.getElementById("scale");
+const templateSelect = document.getElementById("template");
+
+let img = null;
+
+let scale = 1;
+let posX = 0;
+let posY = 0;
+
+let dragging = false;
+let startX = 0;
+let startY = 0;
+
+const templates = {
+    card:{width:856,height:540},
+    fourcut:{width:540,height:860},
+    square:{width:700,height:700}
+};
+
+function setTemplate(){
+
+    const type = templateSelect.value;
+
+    canvas.width = templates[type].width;
+    canvas.height = templates[type].height;
+
+    draw();
+}
+
+templateSelect.addEventListener("change",setTemplate);
+
+upload.addEventListener("change",(e)=>{
+
+    const file = e.target.files[0];
+
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(event){
+
+        img = new Image();
+
+        img.onload = function(){
+
+            scale = 1;
+            posX = 0;
+            posY = 0;
+
+            draw();
+        }
+
+        img.src = event.target.result;
+    }
+
+    reader.readAsDataURL(file);
+});
+
+scaleSlider.addEventListener("input",()=>{
+
+    scale = Number(scaleSlider.value);
+
+    draw();
+});
+
+function draw(){
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    ctx.fillStyle="#f0ebe5";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    if(!img){
+
+        ctx.fillStyle="#999";
+        ctx.font="28px sans-serif";
+        ctx.textAlign="center";
+
+        ctx.fillText(
+            "사진을 업로드해주세요",
+            canvas.width/2,
+            canvas.height/2
+        );
+
+        return;
+    }
+
+    const imageRatio = img.width / img.height;
+    const canvasRatio = canvas.width / canvas.height;
+
+    let drawWidth;
+    let drawHeight;
+
+    if(imageRatio > canvasRatio){
+
+        drawHeight = canvas.height * scale;
+        drawWidth = drawHeight * imageRatio;
+
+    }else{
+
+        drawWidth = canvas.width * scale;
+        drawHeight = drawWidth / imageRatio;
+    }
+
+    const x = canvas.width/2 - drawWidth/2 + posX;
+    const y = canvas.height/2 - drawHeight/2 + posY;
+
+    roundRect(ctx,0,0,canvas.width,canvas.height,40);
+
+    ctx.save();
+    ctx.clip();
+
+    ctx.drawImage(img,x,y,drawWidth,drawHeight);
+
+    ctx.restore();
+
+    ctx.strokeStyle="rgba(255,255,255,0.9)";
+    ctx.lineWidth=8;
+
+    roundRect(ctx,4,4,canvas.width-8,canvas.height-8,36);
+
+    ctx.stroke();
+}
+
+function roundRect(ctx,x,y,width,height,radius){
+
+    ctx.beginPath();
+
+    ctx.moveTo(x+radius,y);
+    ctx.lineTo(x+width-radius,y);
+    ctx.quadraticCurveTo(x+width,y,x+width,y+radius);
+
+    ctx.lineTo(x+width,y+height-radius);
+    ctx.quadraticCurveTo(x+width,y+height,x+width-radius,y+height);
+
+    ctx.lineTo(x+radius,y+height);
+    ctx.quadraticCurveTo(x,y+height,x,y+height-radius);
+
+    ctx.lineTo(x,y+radius);
+    ctx.quadraticCurveTo(x,y,x+radius,y);
+
+    ctx.closePath();
+}
+
+canvas.addEventListener("mousedown",(e)=>{
+
+    dragging = true;
+
+    startX = e.offsetX;
+    startY = e.offsetY;
+});
+
+canvas.addEventListener("mousemove",(e)=>{
+
+    if(!dragging) return;
+
+    posX += e.offsetX - startX;
+    posY += e.offsetY - startY;
+
+    startX = e.offsetX;
+    startY = e.offsetY;
+
+    draw();
+});
+
+canvas.addEventListener("mouseup",()=>{
+
+    dragging = false;
+});
+
+canvas.addEventListener("mouseleave",()=>{
+
+    dragging = false;
+});
+
+function resetImage(){
+
+    scale = 1;
+    posX = 0;
+    posY = 0;
+
+    scaleSlider.value = 1;
+
+    draw();
+}
+
+function downloadImage(){
+
+    const link = document.createElement("a");
+
+    link.download = "card-sticker.png";
+
+    link.href = canvas.toDataURL();
+
+    link.click();
+}
+
+setTemplate();
+
+</script>
+
+</body>
+</html>
